@@ -1,5 +1,8 @@
 package com.study.restfulwebservice.user;
 
+import org.hibernate.EntityMode;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -7,6 +10,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 public class UserController {
@@ -21,14 +26,21 @@ public class UserController {
         return userDaoService.findAll();
     }
 
-    //GET /users/1 or /users/10
+    //UserController.java
+//    GET / users/1 or users/10 -- String
     @GetMapping("/users/{id}")
-    public User retrieveUser(@PathVariable int id) {
+    public EntityModel<User> retrieveUsers(@PathVariable int id){
         User user = userDaoService.findOne(id);
-        if (user == null) {
+
+        if(user == null){
             throw new UserNotFoundException(String.format("ID[%s] not found", id));
         }
-        return user;
+
+        EntityModel<User> model = new EntityModel<>(user);
+        WebMvcLinkBuilder linkTo = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+        model.add(linkTo.withRel("all-user"));
+
+        return model;
     }
 
     @PostMapping("/users")
